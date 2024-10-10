@@ -15,7 +15,7 @@ TinyKart *tinyKart;
 LD06 ld06{};
 
 // Scan processor
-ScanBuilder scan_builder{180, 360, ScanPoint{0.1524, 0}};
+ScanBuilder scan_builder{180,360, ScanPoint{0,0}};
 
 /// Starts/stops the kart
 void estop() {
@@ -72,39 +72,44 @@ void loop() {
             // Check if we have a 180 degree scan built
             if (maybe_scan) {
                 auto scan = *maybe_scan;
+                // auto third_scan = scan[scan.size()/3];
+                // auto two_third_scan = scan[2*scan.size()/3];
+                // auto first = scan[0];
+                // auto last = scan[scan.size()-1];
 
-                auto front_obj_dist = scan[scan.size() / 2].dist(ScanPoint::zero());
+                logger.printf("*****START SCAN******\n");
+                int count=0;
+                int nxcount=0;
+                int nycount=0;
 
-                // If object is 45cm in front of kart, stop (0.0 means bad point)
-                if (front_obj_dist != 0.0 && front_obj_dist < 0.45 + 0.1524) {
-                    logger.printf("Stopping because of object: %himm in front! \n", (int16_t) (front_obj_dist * 1000));
-                    tinyKart->pause();
-                    digitalWrite(LED_YELLOW, HIGH);
+        for (auto &pt: scan) {
+                pt.y=pt.y*100;
+                pt.x=pt.x*100;
+
+    if (pt.x == 0 && pt.y == 0) {count++; continue;}
+  
+     if( pt.x < 0){
+        nxcount++;
+     }
+     if( pt.y <0){
+        nycount++;
+     }
+  
+
+
+      if((pt.x> -10 && pt.x < 10 ) && (pt.y > 0 && pt.y < 27)){
+
+                        logger.printf("\nIn box");
+
+
+   }
+
                 }
+                logger.printf("\ncount: %d, scan_size: %d, negativeX: %d,negativeY: %d",count,scan.size(), nxcount, nycount);
 
-                // Find target point
-                auto maybe_target_pt = gap_follow::find_gap_bubble(scan, 1.0);
-
-                if (maybe_target_pt) {
-                    auto target_pt = *maybe_target_pt;
-
-                    logger.printf("Target point: (%hi, %hi)\n", (int16_t) (target_pt.x * 1000),
-                                  (int16_t) (target_pt.y * 1000));
-
-                    // Find command to drive to point
-                    auto command = pure_pursuit::calculate_command_to_point(tinyKart, target_pt, 1.0);
-
-                    // Set throttle proportional to distance to point in front of kart
-                    command.throttle_percent = mapfloat(front_obj_dist, 0.1, 10.0, 0.15, tinyKart->get_speed_cap());
-
-                    logger.printf("Command: throttle %hu, angle %hi\n", (uint16_t) (command.throttle_percent * 100),
-                                  (int16_t) (command.steering_angle));
-
-                    // Actuate kart
-                    tinyKart->set_forward(command.throttle_percent);
-                    tinyKart->set_steering(command.steering_angle);
-                }
+                logger.printf("*****END SCAN******\n\n");
             }
+
         } else {
             switch (scan_res.error) {
                 case ScanResult::Error::CRCFail:
