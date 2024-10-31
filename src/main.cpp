@@ -7,6 +7,7 @@
 #include "pure_pursuit.hpp"
 #include "f1tenth_gap_follow.hpp"
 #include "naive_gap_follow.hpp"
+#include "math.h"
 
 // Robot control
 TinyKart *tinyKart;
@@ -78,10 +79,48 @@ void loop()
             if (maybe_scan)
             {
                 auto scan = *maybe_scan;
+                auto maybe_gap = gap_follow::find_gap_bubble(scan, 0.5, true);
                 logger.printf("*****START SCAN******\n");
                 bool canMove = true;
+                logger.printf("points: %hu\n", scan.size());
 
-                for (auto &pt : scan)
+
+
+                if (maybe_gap) {
+                    auto gap = *maybe_gap;
+                    auto x = (gap.x * 100);
+                    auto y = (gap.y * 100);
+                    auto steering_command = pure_pursuit::calculate_command_to_point(tinyKart, gap, 1.5);
+
+
+                    logger.printf("%hu, %hu", x, y);
+///fix
+                    if (abs(x) > 10) {
+                        tinyKart->set_steering(-steering_command.steering_angle);
+                    } else {
+                        tinyKart->set_steering(0);
+                    }
+
+                    if (gap.dist(ScanPoint{0, 0}) < 0.2) {
+                        //panic
+                        tinyKart->set_neutral();
+                    } else {
+                        auto speed = 0.19;
+                        /*auto speed = mapfloat(y, 30, 130, 0.05, 0.3);
+                        
+                        if (speed < 0 || speed > 0.7) {
+                            speed = 0;
+                        }*/
+                        tinyKart->set_forward(steering_command.throttle_percent);
+                    }
+
+
+                }else{
+                        tinyKart->set_steering(0);
+                        tinyKart->set_neutral();
+
+                }
+                /*for (auto &pt : scan)
                 {
                     pt.x*=100;
                     pt.y*=100;
@@ -102,7 +141,7 @@ void loop()
                 else
                 {
                     tinyKart->set_neutral();
-                }
+                }*/
                 logger.printf("*****END SCAN******\n\n");
             }
         }

@@ -16,7 +16,7 @@ namespace pure_pursuit {
                                                        float max_lookahead) {
 
         // Cap point to max lookahead
-        if (auto target_dist = target_point.dist(ScanPoint::zero()); target_dist > max_lookahead) {
+        /*if (auto target_dist = target_point.dist(ScanPoint::zero()); target_dist > max_lookahead) {
             auto angle = atan2f(target_point.y, target_point.x);
 
             auto new_y = sin(angle) * max_lookahead;
@@ -27,12 +27,17 @@ namespace pure_pursuit {
 
             logger.printf("Capping to actual lookahead of: (%hi, %hi)\n", (int16_t) (target_point.x * 1000),
                           (int16_t) (target_point.y * 1000));
+        }*/
+
+        if (auto target_dist = target_point.dist(ScanPoint::zero()); target_dist > max_lookahead) {
+            target_point.y = target_point.y / target_dist * max_lookahead;
+            target_point.x = target_point.x / target_dist * max_lookahead;
         }
 
         AckermannCommand command{};
 
         // Calculate the angle between the robot and the goal
-        float alpha = atan2f(target_point.y, target_point.x);
+        float alpha = atan2f(target_point.x, target_point.y);
 
         // Set the desired steering angle and set it to the ackerman command
         float steering_angle = atanf(

@@ -78,6 +78,8 @@ public:
     void set_steering(float angle) {
         if (this->estopped) return;
 
+        angle = std::clamp(angle, -get_max_steering(), get_max_steering());
+
         // Max steering is 24 degrees, map to servo 0-180 degrees
         auto servo_angle = mapfloat(angle + steering_bias, -get_max_steering(), get_max_steering(), 199, 0);
         servo.write(int(servo_angle));

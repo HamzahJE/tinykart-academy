@@ -12,7 +12,7 @@ gap_follow::find_gap_naive(const std::vector<ScanPoint> &scan, uint8_t min_gap_s
     // Find gaps
     for (uint32_t i = 0; i < scan.size(); ++i) {
         float dist = scan[i].dist(ScanPoint::zero());
-
+        
         // If point is part of gap
         if (dist >= min_dist) {
             current_gap_len++;
